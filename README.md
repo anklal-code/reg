@@ -36,8 +36,3 @@ in financial regulation.
 *For informational and reference purposes only. 
 Always verify against current official technical standards.*
 ```
-
-
-However, for a cleaner download experience, use this format in your LinkedIn post:
-```
-https://yourusername.github.io/regreporting-compass
