@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RegReporting Compass — Offline Edition</title>
+<style>
+:root {
+  --bg: #0a0f1a;
+  --bg2: #111827;
+  --bg3: #1a2235;
+  --bg4: #1f2d45;
+  --border: #1e2d4a;
+  --border2: #2a3f6a;
+  --text: #e8edf5;
+  --text2: #8fa3c7;
+  --text3: #4a6080;
+  --amber: #f5a623;
+  --amber2: #b87a1a;
+  --amber-bg: rgba(245,166,35,0.12);
+  --emir: #4a90d9;
+  --mifid: #a855f7;
+  --cftc: #ef4444;
+  --hkma: #10b981;
+  --mas: #f59e0b;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #eab308;
+  --r: 6px;
+  --r2: 10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,15,26,0.97);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0;padding:0 20px;height:50px}
+.brand{font-family:'Courier New',monospace;font-size:0.7rem;font-weight:700;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;margin-right:28px;white-space:nowrap;text-decoration:none}
+.brand span{color:var(--text3)}
+.nav-links{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none}
+.nav-links::-webkit-scrollbar{display:none}
+.nav-btn{font-family:'Courier New',monospace;font-size:.65rem;font-weight:600;color:var(--text3);background:transparent;border:1px solid transparent;border-radius:3px;padding:5px 11px;cursor:pointer;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;transition:.15s}
+.nav-btn:hover{color:var(--text);background:var(--bg3);border-color:var(--border)}
+.nav-btn.act{color:var(--amber);background:var(--amber-bg);border-color:var(--amber2)}
+
+/* TICKER */
+.ticker{background:var(--bg2);border-bottom:1px solid var(--border);padding:7px 0;overflow:hidden}
+.ticker-track{display:flex;animation:tick 60s linear infinite;white-space:nowrap}
+.ticker-item{font-family:'Courier New',monospace;font-size:.6rem;color:var(--text2);padding:0 22px;border-right:1px solid var(--border);display:inline-flex;align-items:center;gap:5px}
+.ti-k{color:var(--amber);font-weight:700}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* HERO */
+.hero{padding:44px 24px 36px;border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:radial-gradient(ellipse at right,rgba(74,144,217,.05) 0,transparent 70%);pointer-events:none}
+.hero-inner{max-width:1360px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{font-family:'Courier New',monospace;font-size:.6rem;font-weight:700;color:var(--amber);letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.hero-tag::before{content:'';width:18px;height:1px;background:var(--amber)}
+.hero-title{font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:700;color:var(--text);line-height:1.15;margin-bottom:12px;max-width:700px}
+.hero-title em{font-style:italic;color:var(--amber)}
+.hero-desc{font-size:.88rem;color:var(--text2);line-height:1.7;max-width:600px;margin-bottom:24px;font-weight:300}
+.regime-chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:'Courier New',monospace;font-size:.65rem;font-weight:700;padding:5px 11px;border-radius:4px;border:1px solid;letter-spacing:.05em;transition:.15s}
+.chip:hover{filter:brightness(1.2);transform:translateY(-1px)}
+.chip-emir{background:rgba(74,144,217,.08);color:var(--emir);border-color:rgba(74,144,217,.25)}
+.chip-mifid{background:rgba(168,85,247,.08);color:var(--mifid);border-color:rgba(168,85,247,.25)}
+.chip-cftc{background:rgba(239,68,68,.08);color:var(--cftc);border-color:rgba(239,68,68,.25)}
+.chip-hkma{background:rgba(16,185,129,.08);color:var(--hkma);border-color:rgba(16,185,129,.25)}
+.chip-mas{background:rgba(245,158,11,.08);color:var(--mas);border-color:rgba(245,158,11,.25)}
+
+/* MAIN */
+.main{max-width:1360px;margin:0 auto;padding:22px 24px 48px}
+.section{display:none}.section.act{display:block}
+
+/* TYPOGRAPHY */
+h2{font-size:1.3rem;font-weight:700;color:var(--text);margin-bottom:5px}
+.sub{font-size:.82rem;color:var(--text2);line-height:1.65;margin-bottom:18px;max-width:700px}
+
+/* TABS / FILTERS */
+.tab-bar{display:flex;gap:2px;background:var(--bg2);padding:4px;border-radius:var(--r);margin-bottom:18px;flex-wrap:wrap}
+.tab-btn{font-family:'Courier New',monospace;font-size:.62rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:none;border-radius:3px;background:transparent;color:var(--text3);cursor:pointer;transition:.15s;white-space:nowrap}
+.tab-btn:hover{color:var(--text);background:var(--bg4)}
+.tab-btn.act{color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber2)}
+.filter-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;flex-wrap:wrap}
+.flbl{font-family:'Courier New',monospace;font-size:.58rem;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.f-btn{font-family:'Courier New',monospace;font-size:.62rem;font-weight:500;padding:4px 9px;border-radius:3px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:.15s;text-transform:uppercase;letter-spacing:.03em}
+.f-btn:hover{border-color:var(--border2);color:var(--text)}
+.f-btn.act{background:var(--amber-bg);border-color:var(--amber2);color:var(--amber)}
+
+/* STAT ROW */
+.stat-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+.stat-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.stat-num{font-size:2rem;font-weight:700;margin-bottom:2px;font-family:'Courier New',monospace}
+.stat-lbl{font-size:.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:.06em}
+
+/* GRID 5 */
+.grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+
+/* CARD */
+.card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:16px;transition:.15s}
+.card:hover{border-color:var(--border2)}
+
+/* PANEL */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden}
+.panel-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.panel-title{font-family:'Courier New',monospace;font-size:.65rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text2)}
+.panel-body{padding:16px}
+
+/* TABLE */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r2)}
+table{width:100%;border-collapse:collapse;font-size:.72rem}
+th{padding:9px 11px;text-align:left;font-family:'Courier New',monospace;font-weight:700;font-size:.6rem;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);background:var(--bg);border-bottom:1px solid var(--border2);white-space:nowrap;position:sticky;top:0;z-index:5}
+td{padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.5;color:var(--text2)}
+tr:hover td{background:var(--bg4)}
+tr:last-child td{border-bottom:none}
+.stickyc{position:sticky;left:0;background:var(--bg2);z-index:4;border-right:1px solid var(--border2)}
+tr:hover .stickyc{background:var(--bg4)}
+
+/* PILLS */
+.pill{display:inline-flex;align-items:center;gap:3px;font-family:'Courier New',monospace;font-size:.58rem;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid;letter-spacing:.05em;text-transform:uppercase}
+.pill-yes{background:rgba(34,197,94,.1);color:#22c55e;border-color:rgba(34,197,94,.3)}
+.pill-no{background:rgba(100,116,139,.1);color:#64748b;border-color:rgba(100,116,139,.25)}
+.pill-part{background:rgba(234,179,8,.1);color:#eab308;border-color:rgba(234,179,8,.3)}
+.pill-cond{background:rgba(168,85,247,.1);color:#a855f7;border-color:rgba(168,85,247,.3)}
+.pill-mand{background:rgba(34,197,94,.12);color:#22c55e;border-color:rgba(34,197,94,.3)}
+.pill-opt{background:rgba(100,116,139,.1);color:#64748b;border-color:rgba(100,116,139,.2)}
+
+/* DOT */
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;flex-shrink:0}
+.dot-y{background:#22c55e}.dot-n{background:#475569}.dot-p{background:#eab308}.dot-c{background:#a855f7}
+
+/* INFO / WARN BOXES */
+.info-box{background:rgba(74,144,217,.07);border:1px solid rgba(74,144,217,.2);border-radius:var(--r);padding:12px 14px;font-size:.77rem;color:var(--text2);line-height:1.55;margin-bottom:14px}
+.info-box strong{color:var(--emir)}
+.warn-box{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:var(--r);padding:12px 14px;font-size:.77rem;color:var(--text2);line-height:1.55;margin-bottom:14px}
+.warn-box strong{color:var(--amber)}
+.diff-high{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);color:#fca5a5}
+.diff-med{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);color:#fcd34d}
+
+/* SECTION DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin:24px 0 16px}
+.div-line{flex:1;height:1px;background:var(--border)}
+.div-lbl{font-family:'Courier New',monospace;font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);white-space:nowrap}
+
+/* ATTR SIDEBAR LAYOUT */
+.attr-layout{display:flex;gap:16px;align-items:flex-start}
+.attr-sidebar{width:200px;flex-shrink:0;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;position:sticky;top:66px;max-height:calc(100vh - 80px);overflow-y:auto}
+.attr-content{flex:1;min-width:0}
+.sidebar-sec-hdr{padding:8px 12px;font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--amber);background:rgba(245,166,35,.05);border-bottom:1px solid var(--border)}
+.sidebar-item{padding:9px 12px;cursor:pointer;border-bottom:1px solid var(--border);border-left:2px solid transparent;transition:.15s}
+.sidebar-item:hover{background:var(--bg4)}
+.sidebar-item.act{background:var(--amber-bg);border-left-color:var(--amber)}
+.sidebar-item.act .si-name{color:var(--amber)}
+.si-name{font-size:.73rem;font-weight:500;color:var(--text);line-height:1.3}
+
+/* ATTR DETAIL */
+.attr-detail{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px}
+.attr-detail-hdr{padding:14px 18px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:10px}
+.attr-id-badge{font-family:'Courier New',monospace;font-size:.6rem;font-weight:700;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber2);padding:3px 7px;border-radius:3px;flex-shrink:0;margin-top:2px}
+.attr-name{font-size:1.05rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.attr-desc{font-size:.77rem;color:var(--text2);line-height:1.5}
+
+/* COMPARE GRID */
+.cmp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+.cmp-cell{padding:14px;border-right:1px solid var(--border);border-bottom:1px solid var(--border)}
+.cmp-cell:last-child{border-right:none}
+.cmp-regime-name{font-family:'Courier New',monospace;font-size:.65rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
+.cmp-field-name{font-size:.62rem;color:var(--text3);margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.cmp-lbl{font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:3px;margin-top:9px}
+.cmp-val{font-size:.72rem;color:var(--text2);line-height:1.5}
+.cmp-val.hl{color:var(--text);font-weight:500}
+.cmp-note{font-size:.67rem;color:var(--amber2);border-left:2px solid var(--amber2);padding-left:7px;margin-top:6px;line-height:1.5}
+
+/* DIFF TABLE */
+.diff-row{display:grid;grid-template-columns:130px repeat(5,1fr);border-bottom:1px solid var(--border)}
+.diff-row:last-child{border-bottom:none}
+.diff-lbl{padding:10px;font-family:'Courier New',monospace;font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);background:var(--bg2);border-right:1px solid var(--border2);display:flex;align-items:flex-start;padding-top:12px}
+.diff-cell{padding:10px;font-size:.71rem;border-right:1px solid var(--border);line-height:1.5;color:var(--text2)}
+.diff-cell:last-child{border-right:none}
+.diff-warn-cell{background:rgba(245,166,35,.04)}
+
+/* SCENARIO */
+.scen-layout{display:grid;grid-template-columns:240px 1fr;gap:14px;align-items:flex-start}
+.scen-list{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;position:sticky;top:66px}
+.scen-list-hdr{padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Courier New',monospace;font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.scen-item{padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--border);border-left:2px solid transparent;transition:.15s}
+.scen-item:hover{background:var(--bg4)}
+.scen-item.act{background:var(--amber-bg);border-left-color:var(--amber)}
+.scen-item.act .si-title{color:var(--amber)}
+.si-id{font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;color:var(--text3);margin-bottom:3px}
+.si-title{font-size:.75rem;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px}
+.si-cat{font-family:'Courier New',monospace;font-size:.55rem;padding:2px 6px;border-radius:3px;background:rgba(74,144,217,.1);color:var(--emir);border:1px solid rgba(74,144,217,.2);text-transform:uppercase;letter-spacing:.04em;display:inline-block}
+
+/* OBLIGATION */
+.obl-row{display:grid;grid-template-columns:80px 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);align-items:flex-start}
+.obl-row:last-child{border-bottom:none}
+.obl-regime{font-family:'Courier New',monospace;font-size:.65rem;font-weight:700}
+.obl-action{font-size:.7rem;color:var(--text2);margin-top:5px;padding:5px 8px;background:var(--bg3);border-radius:3px;line-height:1.5}
+.obl-caveat{font-size:.68rem;color:var(--amber2);margin-top:5px;padding:5px 8px;background:rgba(245,166,35,.06);border-radius:3px;border:1px solid rgba(245,166,35,.2);line-height:1.5}
+.obl-meta{font-size:.7rem;margin-bottom:4px}
+.obl-meta span{color:var(--text3)}
+
+/* SUMMARY BAR */
+.summ-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px}
+.summ-cell{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px;text-align:center}
+.summ-regime{font-family:'Courier New',monospace;font-size:.6rem;font-weight:700;margin-bottom:5px}
+.summ-icon{font-size:1.4rem;margin-bottom:3px}
+.summ-lbl{font-size:.58rem;color:var(--text3)}
+
+/* THRESHOLD */
+.thresh-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:18px}
+.thresh-hdr{padding:11px 14px;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600}
+.thresh-row{display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border);font-size:.72rem}
+.thresh-row:last-child{border-bottom:none}
+.thresh-key{color:var(--text2)}
+.thresh-val{font-family:'Courier New',monospace;font-size:.68rem;color:var(--amber);font-weight:700;background:var(--amber-bg);padding:2px 7px;border-radius:3px;border:1px solid var(--amber2)}
+
+/* KEY DIFF */
+.kdiff-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px}
+.kdiff-hdr{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg2);display:flex;align-items:center;gap:10px}
+.kdiff-title{font-size:.85rem;font-weight:600;color:var(--text)}
+.kdiff-sev{font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;padding:2px 7px;border-radius:3px;border:1px solid;text-transform:uppercase;letter-spacing:.05em}
+.kdiff-body{padding:0 16px}
+.kdiff-row{display:grid;grid-template-columns:58px 1fr;gap:8px;padding:9px 0;border-bottom:1px solid var(--border)}
+.kdiff-row:last-child{border-bottom:none}
+.kdiff-regime{font-family:'Courier New',monospace;font-size:.6rem;font-weight:700}
+.kdiff-text{font-size:.73rem;color:var(--text2);line-height:1.55}
+
+/* FOOTER */
+.footer{margin-top:50px;padding:18px 24px;border-top:1px solid var(--border);text-align:center}
+.footer-text{font-family:'Courier New',monospace;font-size:.58rem;color:var(--text3);letter-spacing:.05em;line-height:1.9}
+
+/* RESPONSIVE */
+@media(max-width:900px){
+  .stat-row,.grid5,.summ-bar{grid-template-columns:repeat(2,1fr)}
+  .cmp-grid{grid-template-columns:1fr 1fr}
+  .attr-layout{flex-direction:column}
+  .attr-sidebar{width:100%;position:static}
+  .scen-layout{grid-template-columns:1fr}
+  .scen-list{position:static}
+  .diff-row{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .stat-row,.summ-bar{grid-template-columns:1fr}
+  .main{padding:16px}
+  .hero{padding:28px 16px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <span class="brand">RegReporting<span> Compass</span></span>
+  <div class="nav-links">
+    <button class="nav-btn act" onclick="showSection('overview',this)">Hub</button>
+    <button class="nav-btn" onclick="showSection('products',this)">Product scope</button>
+    <button class="nav-btn" onclick="showSection('attributes',this)">Attributes</button>
+    <button class="nav-btn" onclick="showSection('scenarios',this)">Scenarios</button>
+    <button class="nav-btn" onclick="showSection('thresholds',this)">Counterparty</button>
+    <button class="nav-btn" onclick="showSection('differences',this)">Key differences</button>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker">
+    <span class="ticker-item"><span class="ti-k">EMIR REFIT</span> Effective Apr 29, 2024 · 203 Fields</span>
+    <span class="ticker-item"><span class="ti-k">CFTC REWRITE</span> Effective Dec 5, 2022 · 128 Fields</span>
+    <span class="ticker-item"><span class="ti-k">MiFID II</span> Since Jan 3, 2018 · 65 Fields (RTS 22)</span>
+    <span class="ticker-item"><span class="ti-k">HKMA</span> Phased 2015–2023 · 84 Fields</span>
+    <span class="ticker-item"><span class="ti-k">MAS PHASE 3</span> Oct 2024 Updates · 91 Fields</span>
+    <span class="ticker-item"><span class="ti-k">UTI STANDARD</span> ISO 23897:2020 · CPMI-IOSCO Aligned</span>
+    <span class="ticker-item"><span class="ti-k">UPI STANDARD</span> ANNA-DSB · 48 Product Attributes</span>
+    <span class="ticker-item"><span class="ti-k">LEI REQUIREMENT</span> ISO 17442 · GLEIF Registry · All Regimes</span>
+    <span class="ticker-item"><span class="ti-k">REPORTING MODEL</span> EMIR: Dual | CFTC: Waterfall | MiFID/HKMA/MAS: Single</span>
+    <span class="ticker-item"><span class="ti-k">EMIR REFIT</span> Effective Apr 29, 2024 · 203 Fields</span>
+    <span class="ticker-item"><span class="ti-k">CFTC REWRITE</span> Effective Dec 5, 2022 · 128 Fields</span>
+    <span class="ticker-item"><span class="ti-k">MiFID II</span> Since Jan 3, 2018 · 65 Fields (RTS 22)</span>
+    <span class="ticker-item"><span class="ti-k">HKMA</span> Phased 2015–2023 · 84 Fields</span>
+    <span class="ticker-item"><span class="ti-k">MAS PHASE 3</span> Oct 2024 Updates · 91 Fields</span>
+    <span class="ticker-item"><span class="ti-k">UTI STANDARD</span> ISO 23897:2020 · CPMI-IOSCO Aligned</span>
+    <span class="ticker-item"><span class="ti-k">UPI STANDARD</span> ANNA-DSB · 48 Product Attributes</span>
+    <span class="ticker-item"><span class="ti-k">LEI REQUIREMENT</span> ISO 17442 · GLEIF Registry · All Regimes</span>
+    <span class="ticker-item"><span class="ti-k">REPORTING MODEL</span> EMIR: Dual | CFTC: Waterfall | MiFID/HKMA/MAS: Single</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Regulatory Intelligence — Offline Edition</div>
+    <h1 class="hero-title">Cross-Jurisdiction<br><em>Derivatives Reporting</em><br>Comparative Tool</h1>
+    <p class="hero-desc">Comprehensive analysis of product eligibility, counterparty classification, attribute-level field validations, and business scenario assessments across EMIR, MiFID II, CFTC, HKMA, and MAS. Built on verified official technical standards.</p>
+    <div class="regime-chips">
+      <span class="chip chip-emir">🇪🇺 EMIR REFIT 2024</span>
+      <span class="chip chip-mifid">🇪🇺 MiFID II / MiFIR</span>
+      <span class="chip chip-cftc">🇺🇸 CFTC Rewrite 2022</span>
+      <span class="chip chip-hkma">🇭🇰 HKMA / SFC</span>
+      <span class="chip chip-mas">🇸🇬 MAS SFA</span>
+    </div>
+  </div>
+</section>
+
+<div class="main">
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: OVERVIEW
+════════════════════════════════════════════════════════ -->
+<div id="s-overview" class="section act">
+  <h2>Regulatory overview</h2>
+  <p class="sub">Five OTC derivatives reporting frameworks — scope, model, legal basis, and field statistics from official technical standards.</p>
+
+  <div class="stat-row" id="stat-row"></div>
+  <div class="grid5" id="overview-cards"></div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-lbl">Product × Regime Reportability</div><div class="div-line"></div></div>
+  <div class="tbl-wrap" id="overview-matrix"></div>
+
+  <div class="divider"><div class="div-line"></div><div class="div-lbl">Full Regime Comparison</div><div class="div-line"></div></div>
+  <div class="tbl-wrap" id="overview-tbl"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: PRODUCTS
+════════════════════════════════════════════════════════ -->
+<div id="s-products" class="section">
+  <h2>Product eligibility &amp; scope</h2>
+  <p class="sub">Which asset classes are reportable under each regime. OTC = over-the-counter; ETD = exchange-traded derivatives. Scope follows official product annexes and technical standards.</p>
+  <div class="filter-bar">
+    <span class="flbl">Filter:</span>
+    <button class="f-btn act" onclick="filterProd('all',this)">All products</button>
+    <button class="f-btn" onclick="filterProd('IR',this)">Interest rate</button>
+    <button class="f-btn" onclick="filterProd('Credit',this)">Credit</button>
+    <button class="f-btn" onclick="filterProd('FX',this)">FX</button>
+    <button class="f-btn" onclick="filterProd('Equity',this)">Equity</button>
+    <button class="f-btn" onclick="filterProd('Commodity',this)">Commodity</button>
+    <button class="f-btn" onclick="filterProd('Securities',this)">Securities</button>
+  </div>
+  <div class="tbl-wrap" id="prod-tbl"></div>
+  <div class="warn-box" style="margin-top:14px"><strong>Key scope differences:</strong> EMIR covers OTC <em>and</em> ETD — the broadest derivative scope. CFTC covers swaps only; exchange-traded futures/options excluded from Part 45. MiFID II covers all financial instruments (widest, including cash bonds/equities) but is a <em>transaction</em> reporting regime with no lifecycle concept. HKMA and MAS cover OTC derivatives only, with phased product scope (IR Phase 1, Credit Phase 2, Equity/Commodity Phase 3).</div>
+  <div class="info-box"><strong>CFTC FX Treasury exemption:</strong> The US Treasury Secretary exempted FX swaps and FX forwards from the Dodd-Frank swap definition — these are NOT reportable under CFTC Part 45. FX options, NDFs, and cross-currency swaps remain reportable swaps. Under EMIR, physically settled FX forwards and FX swaps are fully reportable. This creates major cross-border asymmetry for EU–US FX trades.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: ATTRIBUTES
+════════════════════════════════════════════════════════ -->
+<div id="s-attributes" class="section">
+  <h2>Attributes &amp; field validations</h2>
+  <p class="sub">Side-by-side field specifications, format requirements, validation rules, generation logic, and interpretation differences across all five regimes.</p>
+  <div class="tab-bar" id="attr-cat-bar"></div>
+  <div class="attr-layout">
+    <div class="attr-sidebar" id="attr-sidebar"></div>
+    <div class="attr-content" id="attr-detail"></div>
+  </div>
+  <div class="divider"><div class="div-line"></div><div class="div-lbl">Full Attribute Diff Table</div><div class="div-line"></div></div>
+  <div class="tbl-wrap" id="attr-full-table"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: SCENARIOS
+════════════════════════════════════════════════════════ -->
+<div id="s-scenarios" class="section">
+  <h2>Business scenario analysis</h2>
+  <p class="sub">Real-world trade scenarios analysed across all five regimes — obligations, reporters, deadlines, required actions, and interpretive caveats based on official guidance.</p>
+  <div class="info-box"><strong>How to use:</strong> Select a scenario from the left. Each is analysed regime-by-regime showing whether a reporting obligation arises, who must report, the applicable deadline, required actions, and critical compliance caveats.</div>
+  <div class="scen-layout">
+    <div class="scen-list"><div class="scen-list-hdr">Scenarios</div><div id="scen-list"></div></div>
+    <div id="scen-detail"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: THRESHOLDS
+════════════════════════════════════════════════════════ -->
+<div id="s-thresholds" class="section">
+  <h2>Counterparty classification &amp; thresholds</h2>
+  <p class="sub">How each regime classifies reporting entities and the thresholds that determine reporting, clearing, and margin obligations.</p>
+  <div id="thresh-content"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SECTION: DIFFERENCES
+════════════════════════════════════════════════════════ -->
+<div id="s-differences" class="section">
+  <h2>Key interpretation differences</h2>
+  <p class="sub">The most significant divergences between regimes — where the same trade triggers materially different obligations, treatment, or operational requirements.</p>
+  <div id="diff-content"></div>
+</div>
+
+</div><!-- /main -->
+
+<footer class="footer">
+  <div class="footer-text">
+    RegReporting Compass · Offline Edition<br>
+    Sources: ESMA EMIR REFIT Final RTS (Apr 2024) · CFTC 17 CFR Part 45 Technical Specification (Dec 2022) · MiFID II RTS 22 (2017/590) · HKMA SFO Schedule 10A Reporting Rules · MAS Notice SFR-N01<br>
+    For informational and reference purposes only. Always verify against current official technical standards before relying on for compliance decisions.
+  </div>
+</footer>
+
+<script>
+// ─── DATA ──────────────────────────────────────────────────────────────────
+const R=['EMIR','MIFID','CFTC','HKMA','MAS'];
+const RC={EMIR:'#4a90d9',MIFID:'#a855f7',CFTC:'#ef4444',HKMA:'#10b981',MAS:'#f59e0b'};
+const RF={EMIR:'🇪🇺',MIFID:'🇪🇺',CFTC:'🇺🇸',HKMA:'🇭🇰',MAS:'🇸🇬'};
+const STATS={EMIR:{fields:203,mand:142,ids:8,econ:35,risk:28},MIFID:{fields:65,mand:58,ids:10,econ:15,risk:2},CFTC:{fields:128,mand:104,ids:6,econ:28,risk:18},HKMA:{fields:84,mand:68,ids:5,econ:20,risk:12},MAS:{fields:91,mand:74,ids:5,econ:22,risk:14}};
+
+const OV={
+  EMIR:{full:'European Market Infrastructure Regulation',basis:'EU Reg 648/2012 + EMIR REFIT (EU) 2019/834',ts:'Commission Del. Reg. 2022/1855 + ITS 2022/1860',reg:'ESMA + NCAs (BaFin, FCA, AMF, CONSOB…)',model:'Dual-sided',deadline:'T+1 working day',dest:'DTCC, UnaVista, REGIS-TR, KDPW, ICE TV Europe, CME TR',scope:'OTC + ETD (all derivatives)',update:'Apr 29, 2024 (REFIT go-live)'},
+  MIFID:{full:'MiFID II / MiFIR',basis:'Directive 2014/65/EU + Reg 600/2014 (MiFIR)',ts:'RTS 22 — Commission Del. Reg. 2017/590',reg:'ESMA + NCAs',model:'Single-sided (investment firm → ARM → NCA)',deadline:'T+1 close of next trading day',dest:'ARM: UnaVista, DTCC Reporting, NEX Abide → NCA',scope:'All financial instruments (widest scope incl. cash equities/bonds)',update:'Jan 3, 2018; MiFID Review ongoing 2024'},
+  CFTC:{full:'CFTC Swap Data Reporting (Part 45)',basis:'Dodd-Frank Act 2010; 17 CFR Parts 45, 46, 49',ts:'CFTC Part 45 Technical Spec Appendix 1 (Dec 2022)',reg:'CFTC Division of Market Oversight',model:'Waterfall: SD → MSP → reporting counterparty',deadline:'ATSP: 15 min cleared / 30 min uncleared (biz hrs); T+2 off-hrs',dest:'DTCC SDR, ICE Trade Vault, Bloomberg SDR, CME SDR',scope:'Swaps only (ETD futures/options excluded from Part 45)',update:'Dec 5, 2022 (Rewrite effective)'},
+  HKMA:{full:'HKMA / SFC OTC Derivatives Reporting',basis:'SFO Cap 571 Part IVA; Schedule 10A',ts:'HKMA-SFC Code of Practice; HKTR Reporting Rules 2015',reg:'HKMA (Authorised Institutions) + SFC (Licensed Corps)',model:'Single-sided (licensed entity reports)',deadline:'T+2 HK business days',dest:'HKTR (Hong Kong Trade Repository, operated by HKEX)',scope:'OTC derivatives (phased by product 2015–2023)',update:'2023 HKTR spec updates; UTI alignment'},
+  MAS:{full:'MAS OTC Derivatives Reporting (SFA)',basis:'Securities and Futures Act (SFA) 2001, s.125–129',ts:'MAS Notice SFR-N01 / SFA04-N02',reg:'Monetary Authority of Singapore',model:'Single-sided (LFI reports)',deadline:'T+2 Singapore business days',dest:'DTCC Data Repository (Singapore) Pte. Ltd.',scope:'OTC derivatives (phased by product 2013–2024)',update:'Phase 3 effective Oct 2024'}
+};
+
+const PRODUCTS=[
+  {name:'Interest rate derivatives',sub:'IRS, basis swap, OIS, swaption, cap/floor, FRA, cross-currency swap',cat:'IR',
+   EMIR:{rep:'Yes',scope:'OTC + ETD',note:'Cross-currency swaps classified as IR. ETD IR futures/options also reportable. MAT mandatory clearing: USD/EUR/GBP/JPY fixed-float IRS.',upi:true},
+   MIFID:{rep:'Yes',scope:'Admitted-to-trading + OTC with ISIN/CFI',note:'FX component of XCS may require dual classification. Spot/FX excluded. ISIN required for transaction.',upi:false},
+   CFTC:{rep:'Yes',scope:'Swaps only',note:'ETD IR futures excluded from Part 45. MAT determination: USD/EUR/GBP/JPY fixed-float IRS subject to clearing mandate.',upi:true},
+   HKMA:{rep:'Yes',scope:'OTC only (Phase 1 — 2015)',note:'First product in scope. IRS, OIS, basis swaps, swaptions, caps/floors.',upi:false},
+   MAS:{rep:'Yes',scope:'OTC only (Phase 1 — 2013)',note:'IRS, OIS, swaptions, caps/floors. SGD IRS subject to mandatory clearing from 2023.',upi:false}},
+  {name:'Credit derivatives',sub:'Single-name CDS, index CDS (CDX/iTraxx), CDS options, CLN',cat:'Credit',
+   EMIR:{rep:'Yes',scope:'OTC + ETD',note:'CLN may be classified as bond if no risk-transfer via derivative — check legal form. Index and single-name CDS both in scope.',upi:true},
+   MIFID:{rep:'Yes',scope:'CDS with ISIN admitted to trading',note:'TRS reportable if underlying is financial instrument. CLN treated as bond (not derivative) under MiFID.',upi:false},
+   CFTC:{rep:'Yes',scope:'Swaps only',note:'US-traded CDX and iTraxx indices. CLN is not a swap. CFTC/SEC jurisdictional split: broad-based (CFTC) vs narrow-based (SEC) index CDS.',upi:true},
+   HKMA:{rep:'Yes',scope:'OTC only (Phase 2 — Sep 2016)',note:'Single-name and index CDS added Sep 2016.',upi:false},
+   MAS:{rep:'Yes',scope:'OTC only (Phase 2)',note:'Single-name and index CDS.',upi:false}},
+  {name:'FX derivatives',sub:'FX forward, FX option, FX swap, NDF, NDF option, cross-currency swap',cat:'FX',
+   EMIR:{rep:'Yes',scope:'All OTC FX derivatives',note:'Spot FX (≤T+2 standard settlement) excluded. Physically settled FX forwards and FX swaps: fully reportable.',upi:true},
+   MIFID:{rep:'Partial',scope:'C(4)/C(6) classification test',note:'Spot FX excluded. FX forwards with commercial purpose may qualify for C(4) exemption. NDFs under C(6): reportable.',upi:false},
+   CFTC:{rep:'Partial',scope:'FX options + NDFs reportable; FX swap/forward Treasury-exempted',note:'Treasury Secretary exempted FX swaps and FX forwards from swap definition. FX options, NDFs, XCS remain reportable swaps under Part 45.',upi:true},
+   HKMA:{rep:'Yes',scope:'OTC FX derivatives (Phase 2/3)',note:'Spot FX excluded. NDFs and FX options clearly in scope. FX forwards added in later phases.',upi:false},
+   MAS:{rep:'Yes',scope:'OTC FX derivatives (Phase 2)',note:'Spot FX excluded. NDFs, FX options, FX swaps all reportable.',upi:false}},
+  {name:'Equity derivatives',sub:'Equity swap, TRS (equity), OTC equity option, CFD, variance swap, listed option/future',cat:'Equity',
+   EMIR:{rep:'Yes',scope:'OTC + ETD',note:'Listed equity options/futures reportable under EMIR. CFDs classified as equity derivatives. TRS on equity in scope.',upi:true},
+   MIFID:{rep:'Yes',scope:'All financial instruments (widest scope)',note:'Listed and OTC equity derivatives. TRS reportable if underlying is financial instrument. ETD equity also reported.',upi:false},
+   CFTC:{rep:'Partial',scope:'Equity swaps only (broad-based index)',note:'Listed equity options/futures: SEC jurisdiction. Broad-based index equity swaps: CFTC. Narrow-based: SEC. Mixed swap: both agencies.',upi:true},
+   HKMA:{rep:'Yes',scope:'OTC only (Phase 3)',note:'Equity swaps, TRS, OTC equity options added in Phase 3.',upi:false},
+   MAS:{rep:'Yes',scope:'OTC only (Phase 3)',note:'Equity swaps, variance swaps, TRS added in Phase 3.',upi:false}},
+  {name:'Commodity derivatives',sub:'Energy swap/option, metals, agriculture, freight, emission allowances',cat:'Commodity',
+   EMIR:{rep:'Yes',scope:'OTC + ETD',note:'Emission allowances (EUAs) classified as commodity. Physically settled commodity forwards: check Annex I MiFID commercial exemption eligibility.',upi:true},
+   MIFID:{rep:'Partial',scope:'C(10) commercial purpose exemption test',note:'Commodity derivatives admitted to trading are reportable. Commercial hedges may qualify for C(10) exemption. Ancillary activity threshold: 20% of revenue.',upi:false},
+   CFTC:{rep:'Yes',scope:'Commodity swaps',note:'Broad commodity definition: energy, metals, agriculture, freight, environmental credits. Physically settled forwards excluded from swap definition.',upi:true},
+   HKMA:{rep:'Yes',scope:'OTC only (Phase 3)',note:'Financial commodity derivatives only. Physical commodity excluded.',upi:false},
+   MAS:{rep:'Yes',scope:'OTC only (Phase 3)',note:'Financial commodity derivatives only.',upi:false}},
+  {name:'Securities (bonds, equities, ETFs)',sub:'Government bonds, corporate bonds, listed equities, ETFs, money market instruments',cat:'Securities',
+   EMIR:{rep:'No',scope:'Not in scope',note:'EMIR covers derivatives only. Cash bond and equity transactions are not reportable under EMIR.',upi:false},
+   MIFID:{rep:'Yes',scope:'All financial instruments admitted to trading',note:'MiFID II transaction reporting covers bonds, equities, ETFs traded on EU venues. Each execution is a standalone report. No lifecycle concept.',upi:false},
+   CFTC:{rep:'No',scope:'Not in scope',note:'SEC has jurisdiction for securities. CFTC Part 45 covers swaps, futures, and options on commodities only.',upi:false},
+   HKMA:{rep:'No',scope:'Not in scope',note:'SFO Part IVA OTC derivatives reporting: derivatives only.',upi:false},
+   MAS:{rep:'No',scope:'Not in scope',note:'SFA OTC derivatives reporting: derivatives only.',upi:false}}
+];
+
+const ATTRS=[
+  {id:'UTI',cat:'Identification',name:'Unique Transaction Identifier (UTI)',desc:'Globally unique identifier per reportable derivative transaction. ISO 23897:2020 / CPMI-IOSCO standard.',rows:[
+    {lbl:'Field name',EMIR:'Unique Transaction Identifier',MIFID:'Transaction Reference Number (TRN) — NOT a UTI',CFTC:'UTI (formerly USI)',HKMA:'Unique Transaction Identifier',MAS:'Unique Transaction Identifier'},
+    {lbl:'Format',EMIR:'52-char alphanumeric: 20-char LEI prefix + 32-char alphanumeric suffix (ISO 23897:2020)',MIFID:'Up to 52 alphanumeric chars. Unique per investment firm per day only — NOT globally unique across counterparties.',CFTC:'52-char alphanumeric: 20-char LEI prefix + 32-char suffix (ISO 23897:2020). Aligned from Dec 2022 Rewrite.',HKMA:'52-char alphanumeric. HKTR assigns if not pre-agreed between counterparties.',MAS:'52-char alphanumeric. DTCC Singapore assigns on first submission if not provided.'},
+    {lbl:'Mandatory',EMIR:'Yes',MIFID:'Yes (TRN — different standard)',CFTC:'Yes',HKMA:'Yes',MAS:'Yes'},
+    {lbl:'Generation waterfall',EMIR:'CCP → clearing broker → execution venue → SD → generating party',MIFID:'Reporting investment firm generates own TRN independently — no coordination with counterparty needed',CFTC:'DCO/CCP → SEF/DCM → SD → reporting counterparty',HKMA:'AI/LC generates; HKTR assigns if not pre-agreed',MAS:'LFI generates; DTCC Singapore assigns on first submission'},
+    {lbl:'Global standard',EMIR:'ISO 23897:2020 (CPMI-IOSCO aligned from REFIT Apr 29, 2024)',MIFID:'No global UTI standard — TRN is internal to each investment firm',CFTC:'ISO 23897:2020 (CPMI-IOSCO aligned from Dec 5, 2022 Rewrite)',HKMA:'Aligned with CPMI-IOSCO UTI standard (2023 updates)',MAS:'ISO 23897:2020 aligned (Phase 3 Oct 2024)'},
+    {lbl:'⚠ Critical difference',EMIR:'EMIR and CFTC share same ISO 23897 UTI standard — same UTI can be used in both TRs for the same trade.',MIFID:'MiFID TRN ≠ UTI. Cannot substitute for each other. Dual-obligated firms must generate both: TRN for ARM submission AND coordinate UTI for EMIR TR submission.',CFTC:'CFTC UTI aligned with EMIR UTI post-Rewrite. Same UTI usable in CFTC SDR and MAS/HKMA TRs.',HKMA:'UTI from CFTC waterfall can be reused in HKTR — facilitates cross-regime matching.',MAS:'UTI from CFTC/EMIR waterfall can be reused in DTCC Singapore TR — facilitates reconciliation.'}
+  ]},
+  {id:'UPI',cat:'Identification',name:'Unique Product Identifier (UPI)',desc:'Standardised identifier for the type of derivative product. Issued by ANNA-DSB registry based on 48 product attributes.',rows:[
+    {lbl:'Field name',EMIR:'Unique Product Identifier',MIFID:'ISIN (ISO 6166) + CFI code (ISO 10962)',CFTC:'Unique Product Identifier',HKMA:'Product classification code (HKTR internal taxonomy)',MAS:'Product classification code (MAS internal taxonomy)'},
+    {lbl:'Standard',EMIR:'ANNA-DSB UPI — mandatory from Apr 29, 2024 (EMIR REFIT)',MIFID:'ISIN from ANNA national numbering agencies. CFI code from ISO 10962. NOT ANNA-DSB UPI.',CFTC:'ANNA-DSB UPI — mandatory from Dec 5, 2022 (first major regime globally)',HKMA:'HKTR internal taxonomy. No ANNA-DSB UPI requirement as of 2024.',MAS:'MAS product taxonomy (enhanced Phase 3). No ANNA-DSB UPI as of 2024.'},
+    {lbl:'Mandatory',EMIR:'Yes — from Apr 29, 2024',MIFID:'Yes — but ISIN/CFI (entirely different identifier system)',CFTC:'Yes — from Dec 5, 2022',HKMA:'No ANNA-DSB UPI required',MAS:'No ANNA-DSB UPI required'},
+    {lbl:'How obtained',EMIR:'ANNA-DSB assigns UPI based on 48-attribute product template. Must be obtained pre-trade.',MIFID:'ANNA national numbering agencies assign ISIN. CFI code derived from ISO 10962 instrument type classification.',CFTC:'ANNA-DSB assigns UPI. Reporting party must obtain from ANNA-DSB portal pre-trade.',HKMA:'Reporting entity classifies per HKTR product taxonomy. No external registry needed.',MAS:'LFI classifies per MAS taxonomy. No external registry needed.'},
+    {lbl:'⚠ Critical difference',EMIR:'EMIR and CFTC aligned on ANNA-DSB UPI — same UPI usable in both jurisdictions for same product type.',MIFID:'MiFID uses ISIN/CFI — completely different identifier regime. NOT interchangeable with ANNA-DSB UPI. Firms must maintain two parallel product identifier systems.',CFTC:'First globally to mandate ANNA-DSB UPI. Drove global adoption.',HKMA:'Gap: firms must obtain ANNA-DSB UPIs for EU/US reports but maintain separate HKTR codes for HK reporting. Dual-system burden.',MAS:'Gap: same dual-system burden as HKMA. Phase 3 improvements do not include ANNA-DSB UPI.'}
+  ]},
+  {id:'LEI',cat:'Identification',name:'Legal Entity Identifier (LEI)',desc:'ISO 17442 globally unique identifier for legal entities. Issued by GLEIF-accredited Local Operating Units (LOUs).',rows:[
+    {lbl:'Mandatory',EMIR:'Yes — both counterparties must have active, non-lapsed LEI',MIFID:'Yes — investment firm + all legal entity clients. Natural persons: national ID in concatenation format.',CFTC:'Yes — SD + counterparty. Pre-rewrite: EIN/DUNS accepted as fallback. Post-rewrite Dec 2022: LEI required.',HKMA:'Preferred — HK Business Registration No. (BR No.) accepted as alternative if entity has no LEI.',MAS:'Yes — LFI + financial entity counterparties. Phase 3 tightened enforcement.'},
+    {lbl:'Format',EMIR:'ISO 17442: 20-char alphanumeric (18 chars + 2 check digits). Must be live in GLEIF.',MIFID:'ISO 17442: 20-char. Natural persons: country code + ID number concatenation (RTS 22 format).',CFTC:'ISO 17442: 20-char. SDR validates against GLEIF registry. Lapsed LEIs rejected.',HKMA:'ISO 17442 or HK BR number (HKBR 8-digit) if entity lacks LEI.',MAS:'ISO 17442: 20-char alphanumeric. Validated against GLEIF.'},
+    {lbl:'Renewal',EMIR:'"No LEI = no trade" principle. Annual renewal required. Branch LEI may be required separately from head office LEI.',MIFID:'LEI must be renewed annually. NCA validates against GLEIF. Lapsed LEI = rejected transaction report.',CFTC:'SDR rejects trades where SD/counterparty LEI is lapsed. Annual renewal required.',HKMA:'HKTR validates if LEI provided. BR number accepted without GLEIF validation — creates potential data quality gaps.',MAS:'DTCC Singapore validates against GLEIF. Lapsed LEI may be rejected.'},
+    {lbl:'⚠ Critical difference',EMIR:'Most stringent enforcement: "no LEI = no trade" is actively enforced by NCAs.',MIFID:'Extends LEI to all legal entity clients — broader LEI adoption requirement than EMIR.',CFTC:'Post-rewrite fully aligned with LEI requirement.',HKMA:'Most lenient — BR No. fallback means LEI adoption is not mandated for all counterparties. Creates cross-border matching issues when other regimes require LEI for the same entity.',MAS:'Strict for Phase 1/2 reporters (major banks) but some flexibility for smaller entities.'}
+  ]},
+  {id:'Notional',cat:'Economics',name:'Notional amount',desc:'Reference amount used to calculate payments; principal/face value of the derivative contract.',rows:[
+    {lbl:'Field name',EMIR:'Notional amount (Fields 2.20–2.25 incl. currency)',MIFID:'Quantity / Notional amount (RTS 22 Field 30)',CFTC:'Notional Amount Leg 1 + Notional Amount Leg 2',HKMA:'Notional Amount + Notional Currency',MAS:'Notional Amount + Notional Currency'},
+    {lbl:'Format',EMIR:'Decimal up to 25 significant digits + ISO 4217 currency code. Original and outstanding reported separately.',MIFID:'Up to 18 digits integer + 5 decimal places. Separate notional currency field.',CFTC:'Decimal up to 19 digits. Leg 1 and Leg 2 separately required (both mandatory for XCS). Outstanding notional separate field.',HKMA:'Numeric + ISO 4217 currency. Outstanding notional required.',MAS:'Numeric + ISO 4217 currency. Outstanding notional required for lifecycle updates.'},
+    {lbl:'Amortizing/accreting',EMIR:'Notional schedule MANDATORY from REFIT Apr 2024. One row per notional change date with effective date and notional amount.',MIFID:'Not applicable — MiFID reports execution only, no lifecycle or notional schedule concept.',CFTC:'Notional schedule field for variable notional. Initial + outstanding both required. Schedule with effective dates.',HKMA:'Amortization schedule for structured products required.',MAS:'Notional schedule introduced in Phase 3 (Oct 2024). Aligns with global standards.'},
+    {lbl:'Outstanding notional',EMIR:'Reported separately from original notional. Required at each lifecycle event.',MIFID:'Not applicable — single execution report only.',CFTC:'Both original and outstanding notional required. Updated at each lifecycle event.',HKMA:'Outstanding notional required at each lifecycle event.',MAS:'Outstanding notional required for lifecycle updates.'}
+  ]},
+  {id:'Clearing',cat:'Risk Mitigation',name:'Clearing &amp; CCP',desc:'Whether the trade is centrally cleared and the identity of the CCP / DCO.',rows:[
+    {lbl:'Field',EMIR:'Clearing obligation (Y/N) + CCP LEI (if cleared)',MIFID:'Trading capacity (DEAL/MTCH/AOTC) + venue MIC — different concept',CFTC:'Cleared indicator (Y/N) + CCP LEI + DCO name',HKMA:'Clearing method (CCP / BILATERAL / INTRAGROUP)',MAS:'Clearing method (Y/N) + CCP identifier'},
+    {lbl:'CCP identification',EMIR:'CCP LEI mandatory if cleared. CCP must be ESMA-authorised (or equivalent). ESMA CCP register.',MIFID:'MiFID does not flag clearing in same sense — focuses on execution venue and trading capacity.',CFTC:'DCO LEI required if cleared. DCO must be CFTC-registered. CFTC maintains DCO register.',HKMA:'CCP name or LEI required if cleared. No mandatory clearing obligation in HK as of 2024.',MAS:'CCP LEI. MAS mandatory clearing: SGD IRS (3M/6M SORA) between LFIs from 2023.'},
+    {lbl:'Clearing mandate',EMIR:'Yes: EUR/GBP/JPY/USD IRS fixed-float; credit index CDS (iTraxx/CDX). Exemptions: NFC-, pension schemes, intragroup.',MIFID:'No clearing mandate under MiFID II/MiFIR',CFTC:'Yes — MAT instruments: USD/EUR/GBP/JPY fixed-float IRS; CDX/iTraxx index CDS.',HKMA:'No mandatory central clearing as of 2024. Voluntary CCP use reported.',MAS:'Mandatory clearing: SGD IRS between LFIs using LCH or HKEX from 2023.'},
+    {lbl:'Intragroup',EMIR:'Intragroup clearing exemption available — NCA approval required. Must still report, mark as intragroup.',MIFID:'Not applicable',CFTC:'Inter-affiliate clearing exemption — annual election required. Must still report.',HKMA:'Intragroup trades reportable, marked with intragroup indicator.',MAS:'Intragroup trades reportable.'}
+  ]},
+  {id:'Collateral',cat:'Risk Mitigation',name:'Collateral &amp; margin',desc:'Initial margin (IM), variation margin (VM), and portfolio collateral details.',rows:[
+    {lbl:'Field count',EMIR:'16 dedicated collateral fields (EMIR REFIT Apr 2024 — Fields 2.82–2.97)',MIFID:'0 — collateral completely out of scope for MiFID II transaction reporting',CFTC:'~8 collateral/margin fields (post-Rewrite Dec 2022)',HKMA:'~4 basic collateral fields',MAS:'~6 collateral fields (enhanced Phase 3 Oct 2024)'},
+    {lbl:'Mandatory',EMIR:'Yes — FC↔FC and FC↔NFC+ mandatory. Portfolio indicator and portfolio code required if portfolio margined.',MIFID:'N/A — not in scope',CFTC:'Yes — for registered SDs. IM and VM separately reported.',HKMA:'Partial — Authorised Institutions (banks) required; basic for Licensed Corps.',MAS:'Partial — Phase 1/2 reporters (major banks) required.'},
+    {lbl:'Initial margin detail',EMIR:'IM posted + IM received. Collateral type. Portfolio IM indicator. Portfolio code. IM model type: SIMM / Schedule / Grid / Other. Excess collateral field.',MIFID:'N/A',CFTC:'IM posted + IM received. Collateral type (cash/securities). IM model type.',HKMA:'Basic IM amount + type. No model type field. No excess collateral.',MAS:'IM posted/received. Portfolio margining indicator added Phase 3. No model type yet.'},
+    {lbl:'⚠ Critical difference',EMIR:'Most granular collateral reporting globally. REFIT Apr 2024 was the biggest collateral change in any regime — 16 fields vs the pre-REFIT 2 fields. Collateral decomposition by type and portfolio is unique to EMIR.',MIFID:'Collateral completely out of scope — MiFID reports executions only, not ongoing risk mitigation. Firms with MiFID-only obligation have no collateral reporting requirement.',CFTC:'Comparable depth to EMIR for SDs. SD-centric — non-SD counterparties have no direct collateral reporting obligation.',HKMA:'Significantly less granular than EMIR/CFTC. Basic flag and value only. No model type, no excess collateral field.',MAS:'Less granular than EMIR/CFTC but improving with Phase 3. Portfolio margining indicator is a positive step.'}
+  ]},
+  {id:'Valuation',cat:'Risk Mitigation',name:'Valuation (MTM)',desc:'Current mark-to-market value of the derivative contract.',rows:[
+    {lbl:'Field',EMIR:'Value of contract (Field 2.44) + valuation type (M/MO) + currency + date',MIFID:'Not required for transaction reporting',CFTC:'Mark-to-Market Value + valuation date + currency',HKMA:'Mark-to-Market Value + valuation date + currency',MAS:'Valuation + type + date + currency'},
+    {lbl:'Frequency',EMIR:'Daily MTM required for FC and NFC+. Separate VALU lifecycle action type.',MIFID:'N/A — not a MiFID II transaction reporting field',CFTC:'Daily for registered SDs. Valuation date = business date of report.',HKMA:'Daily for AIs (banks). Weekly acceptable for smaller Licensed Corps.',MAS:'Daily for major LFIs. Phase 3 enhanced valuation field requirements.'},
+    {lbl:'Valuation types',EMIR:'M = mark-to-market (observable prices); MO = mark-to-model (when market prices not observable)',MIFID:'N/A',CFTC:'MTM or model. Model valuation must be disclosed.',HKMA:'MTM or model. Less rigidly defined than EMIR/CFTC.',MAS:'MTM or model. Phase 3 added more granular valuation type field.'}
+  ]},
+  {id:'Lifecycle',cat:'Operational',name:'Lifecycle event reporting',desc:'Post-trade modifications, assignments, terminations, compressions, novations.',rows:[
+    {lbl:'Action types',EMIR:'NEWT, MODI, CORR, EROR, VALU, MARG, TERM, REVI, POSC (9+ action types). EMIR REFIT also added separate Event Type field.',MIFID:'Buy/Sell indicator only. No lifecycle concept — each execution is an independent transaction report.',CFTC:'TRAD, NOVA, TERM, COMP, VALU, MARG, CORR, REVI, EARL, EXER, APOR (~15 event types). Single-field approach.',HKMA:'NEW, MODIFY, TERMINATE, ERROR, COMPRESSION (5 action types). Simplified.',MAS:'NEW, AMEND, TERMINATE, ERROR, COMPRESSION, POSITION (6 types). Phase 3 added POSITION.'},
+    {lbl:'Dual-field structure',EMIR:'UNIQUE: EMIR REFIT introduced two separate fields — Action Type AND Event Type. No other regime has this two-dimension approach. Event types: TRAD, CLRG, COMP, NOVA, TERM, PRTO, PRTC, INCP, UPDT, OPTX, ALOF, VALU, MARG.',MIFID:'Not applicable',CFTC:'Single Event Type field — no dual Action+Event structure',HKMA:'Single Action Type field only',MAS:'Single Action Type field only'},
+    {lbl:'⚠ Critical difference',EMIR:'Two-field structure is unique and creates additional mapping complexity for multi-regime firms. Must assign both Action Type AND Event Type for every report. REVI and POSC action types are EMIR-specific with no direct equivalents in other regimes.',MIFID:'No lifecycle reporting — the most significant operational difference from EMIR. A cancelled trade is reported as a new opposite transaction, not a TERM action.',CFTC:'Single event type taxonomy aligns with CPMI-IOSCO CDE post-Rewrite. Simpler than EMIR dual-field.',HKMA:'5-type taxonomy is the simplest. Must reference original UTI for MODIFY/TERMINATE.',MAS:'POSITION action type (Phase 3) aligns with CPMI-IOSCO position reporting concept.'},
+    {lbl:'Deadline',EMIR:'T+1 for ALL lifecycle events (same as new trade)',MIFID:'T+1 (new execution only)',CFTC:'ATSP for SDs (same as new trade); T+2 for non-SDs',HKMA:'T+2 (same as new trade)',MAS:'T+2 (same as new trade)'}
+  ]},
+  {id:'Deadline',cat:'Operational',name:'Reporting deadline',desc:'Timeframe within which a trade must be submitted to the trade repository after execution.',rows:[
+    {lbl:'New trade',EMIR:'T+1 working day (EU business day from execution)',MIFID:'T+1 close of next trading day',CFTC:'ATSP: 15 min (cleared) / 30 min (uncleared) for SDs during business hours. T+2 off-hours. Non-SD/non-MSP: T+2.',HKMA:'T+2 HK business days from trade date',MAS:'T+2 Singapore business days from trade date'},
+    {lbl:'Lifecycle event',EMIR:'T+1 working day (same standard as new trade)',MIFID:'T+1 (each execution is independent report)',CFTC:'ATSP for SDs; T+2 for non-SDs',HKMA:'T+2',MAS:'T+2'},
+    {lbl:'Error/correction',EMIR:'T+1 from rejection notification date',MIFID:'Next business day from discovery',CFTC:'ATSP from detection',HKMA:'T+2 from detection',MAS:'T+2 from detection'},
+    {lbl:'⚠ Critical difference',EMIR:'T+1 is consistent and predictable. No intraday/real-time requirement.',MIFID:'T+1 measured as close of business — slightly different from EMIR which measures from execution time.',CFTC:'Most aggressive globally — 15/30-minute ATSP windows during business hours for SDs. This drives operational processes globally: a bank with both CFTC and EMIR obligations must build infrastructure for near-real-time CFTC reporting even though EMIR only needs T+1.',HKMA:'Most lenient: T+2 provides greatest operational flexibility for post-trade processing.',MAS:'T+2 aligns with HKMA. Phase 3 encouraged intraday reporting as best practice for Phase 1 reporters but not mandated.'}
+  ]},
+  {id:'Venue',cat:'Execution',name:'Execution venue',desc:'Where the trade was executed — exchange, SEF/MTF/OTF, or bilateral OTC.',rows:[
+    {lbl:'Field',EMIR:'Venue of execution (Field 2.8) — ISO 10383 MIC code',MIFID:'Trading venue — ISO 10383 MIC code (central MiFID II field)',CFTC:'Execution venue type + SEF identifier (DUNS/LEI)',HKMA:'Execution method (coded field)',MAS:'Execution method (coded field)'},
+    {lbl:'OTC bilateral code',EMIR:'XOFF = off-facility OTC; XXXX = bilateral. XTUP = TeS (trading system for professional clients).',MIFID:'XOFF for bilateral OTC. Systematic Internaliser: XOFF + separate SI flag.',CFTC:'"OFF-FACILITY" for bilateral OTC. SEF: DUNS/LEI of SEF. DCM: DCM identifier.',HKMA:'VOICE, ELECTRONIC, INTERDEALER, OTHER — categorical codes only.',MAS:'ON-VENUE, OTC-BILATERAL, BROKER-ARRANGED, OTHER (Phase 3 improved).'},
+    {lbl:'Granularity',EMIR:'ISO 10383 4-char MIC codes for RM, MTF, OTF, XOFF, XXXX, XTUP. Standardised globally.',MIFID:'Most granular venue identification — ISO MIC codes central to MiFID transparency rules. Venue determines pre/post-trade transparency obligations and best execution.',CFTC:'SEF is regulatory equivalent of EU MTF/OTF. No ISO MIC code requirement — SEF DUNS/LEI used instead.',HKMA:'Simple categorical taxonomy. No ISO MIC codes. Less granular than EMIR/MiFID.',MAS:'Categorical codes improved in Phase 3. No ISO MIC codes.'},
+    {lbl:'⚠ Critical difference',EMIR:'ISO MIC codes are globally standardised — same venue identified consistently across EMIR and MiFID reports.',MIFID:'Venue identification is the most critical MiFID field — determines transparency regime and best execution assessment. Same MIC code system as EMIR.',CFTC:'No ISO MIC code system. SEF identifier system is US-specific. A SEF has no MIC code equivalent — cannot directly map to EU MTF/OTF without cross-reference.',HKMA:'No ISO MIC codes. Cannot reconcile with EMIR/MiFID venue data without a mapping table.',MAS:'No ISO MIC codes. Execution method is categorical, not venue-specific.'}
+  ]}
+];
+
+const SCENARIOS=[
+  {id:'S1',title:'EUR/USD cross-currency swap: EU bank vs US corp',cat:'Cross-jurisdiction',
+   desc:'French bank (EU Financial Counterparty under EMIR) executes a 5-year EUR/USD cross-currency swap with a US corporation (non-SD/non-MSP ECP). Bilaterally executed, not cleared.',
+   p1:'French Bank — EU FC, EMIR + MiFID in scope, active LEI holder, ESMA-registered',
+   p2:'US Corporation — ECP under CFTC, not SD/MSP, no EU establishment',
+   analysis:{
+    EMIR:{obl:'MANDATORY',rep:'Both counterparties (dual-sided). French bank as FC has direct primary obligation. US corp may delegate to French bank by written agreement.',deadline:'T+1',action:'Report as NEWT. Classify as FX derivative (cross-currency swap falls under FX derivative asset class under EMIR). Mark Cleared=N. UTI generated by French bank as dealer counterparty. ANNA-DSB UPI required (from Apr 2024). LEI of US corp required.',caveat:'Booking entity is critical — if French bank books trade in its EU entity, EMIR applies. If booking shifts to a US entity of the French bank, EMIR obligation may shift. Delegation agreement with US corp should be in place.'},
+    MIFID:{obl:'MANDATORY',rep:'French bank (as EU credit institution/investment firm) reports to ARM → NCA.',deadline:'T+1',action:'Report transaction. Cross-currency swap classified as FX derivative under MiFID. Counterparty LEI of US corp required. ISIN or CFI code for the instrument.',caveat:'Each execution is a standalone report. No lifecycle updates under MiFID. If trade is later amended, no MODI report under MiFID — each new execution/cancellation is an independent report.'},
+    CFTC:{obl:'CONDITIONAL',rep:'No CFTC obligation if US corp is a pure ECP and French bank is not a registered US SD.',deadline:'N/A',action:'No CFTC Part 45 report required if: (a) French bank is not a registered CFTC SD, (b) trade not executed on US SEF, (c) no US guarantee on French bank obligation. Verify: is any party a US SD or MSP?',caveat:'CFTC cross-border rules (CFTC RIN 3038-AD82): non-US bank dealing with US ECP (non-SD) on OTC bilateral basis → no CFTC reporting obligation for French bank. If French bank has a CFTC-registered US SD subsidiary that books/guarantees the trade, that entity may have CFTC obligation.'},
+    HKMA:{obl:'NOT IN SCOPE',rep:'N/A — neither party is HK-licensed for this trade',deadline:'N/A',action:'No HKMA reporting obligation. Neither party holds a relevant HK license for this specific trade.',caveat:'If the French bank has a Hong Kong branch that is separately licensed as an Authorised Institution (AI) or Licensed Corporation and that HK entity books or executes the trade on its own account, HKMA reporting applies separately to that HK entity.'},
+    MAS:{obl:'NOT IN SCOPE',rep:'N/A — neither party is MAS-licensed for this trade',deadline:'N/A',action:'No MAS reporting obligation. Neither party is a MAS-licensed financial institution for this trade.',caveat:'If trade is routed through a Singapore desk/entity of either party that holds a CMS licence or banking licence from MAS, that Singapore entity would have a separate MAS reporting obligation.'}
+   }},
+  {id:'S2',title:'USD 10Y IRS: US swap dealer vs Singapore bank',cat:'Cross-jurisdiction',
+   desc:'A US Swap Dealer (CFTC-registered) enters a 10-year USD fixed/float IRS with a Singapore bank (MAS LFI). Trade cleared at LCH.Clearnet (LCH SwapClear). No EU entity booking.',
+   p1:'US Swap Dealer — CFTC SD, reports to US SDR, DTCC SDR designated',
+   p2:'Singapore Bank — MAS LFI (full bank), reports to DTCC Data Repository Singapore',
+   analysis:{
+    EMIR:{obl:'NOT IN SCOPE',rep:'N/A — neither party is EU-established for this trade',deadline:'N/A',action:'No EMIR obligation. Neither the US SD nor the Singapore bank is an EU-established entity for this trade.',caveat:'Critical check: if US SD has an EU legal entity (subsidiary or branch) that is the actual legal counterparty or guarantor of this trade, UK/EU EMIR may apply to that EU entity. Booking entity determination is essential.'},
+    MIFID:{obl:'NOT IN SCOPE',rep:'N/A',deadline:'N/A',action:'No MiFID II obligation for this US/SG bilateral trade.',caveat:'If trade is executed on an EU-authorised MTF or OTF, the trading venue has transparency reporting obligations under MiFIR even if counterparties are non-EU.'},
+    CFTC:{obl:'MANDATORY',rep:'US Swap Dealer (SD) reports to SDR. SD is highest in the reporting waterfall — reports for both sides.',deadline:'15 minutes (cleared, business hours)',action:'Report as TRAD (new trade). UTI generated by SD. ANNA-DSB UPI required. Cleared=Y, CCP=LCH LEI (LEI: 213800LBQA1Y9L22JB70 — LCH.Clearnet Ltd). Alpha trade (pre-clearing) + Beta trade (post-clearing) records.',caveat:'SD obligation holds regardless of counterparty jurisdiction. Singapore bank has no separate CFTC Part 45 obligation as a non-SD, non-MSP. Singapore bank is an ECP — SD reports on its behalf.'},
+    HKMA:{obl:'NOT IN SCOPE',rep:'N/A',deadline:'N/A',action:'Singapore bank has no HKMA obligation for this trade. USD IRS booked in Singapore.',caveat:'If the US SD has a Hong Kong branch that is an HKMA-licensed AI and that HK branch is the executing/booking entity for this trade, HKMA reporting applies separately to that HK AI for its own trades.'},
+    MAS:{obl:'MANDATORY',rep:'Singapore bank (MAS LFI) reports to DTCC Data Repository (Singapore) Pte. Ltd.',deadline:'T+2',action:'Report as NEW. USD fixed/float IRS is Phase 1 product. LCH identified as CCP. UTI: use same UTI as generated/reported by CFTC SD where possible for cross-regime reconciliation. Both CFTC and MAS use ISO 23897 UTI standard.',caveat:'UTI matching is key: CFTC and MAS report the same cleared trade. CFTC reports in near-real-time to US SDR; MAS reports T+2 to DTCC Singapore. Same UTI should appear in both — the cleared UTI generated post-novation by LCH is the reference UTI.'}
+   }},
+  {id:'S3',title:'Single-name CDS hedge: German NFC- corporate',cat:'Threshold &amp; classification',
+   desc:'German manufacturing company (EMIR NFC-) buys CDS protection on a key supplier to hedge commercial credit risk exposure. Single-name CDS, not cleared. Counterparty: German bank (EMIR FC).',
+   p1:'German Manufacturing Co. — EMIR NFC- (below all asset class clearing thresholds), hedging trade',
+   p2:'German Bank — EMIR FC (investment firm under MiFID II)',
+   analysis:{
+    EMIR:{obl:'MANDATORY — both parties',rep:'Both: German bank (FC) AND German manufacturing co. (NFC-) both have independent reporting obligations. NFC- may delegate to German bank by written agreement.',deadline:'T+1',action:'Classify as credit derivative. Mark Hedge Indicator = True for NFC- (hedging indicator at the trade level). Hedging position excluded from NFC- clearing threshold calculation (€1bn CDS threshold). Mark Cleared=N. No clearing obligation for NFC-.',caveat:'CRITICAL: NFC- must correctly designate the hedging indicator. ESMA guidance (Q&A EMIR): hedge must be objectively measurable reduction of risk directly related to commercial activity. Internal documentation required BEFORE trade. Incorrect designation = position accumulates toward threshold = potential NFC+ reclassification = retrospective clearing obligation triggers.'},
+    MIFID:{obl:'MANDATORY — German bank only',rep:'German bank (as EU credit institution/investment firm) reports to ARM → NCA. German manufacturing co. has NO MiFID II reporting obligation.',deadline:'T+1',action:'CDS transaction report. German manufacturing co. (NFC-) has no independent MiFID reporting obligation — only investment firms and credit institutions report under MiFID II.',caveat:'NFC- corporate entities do not have MiFID II reporting obligations. Only the investment firm counterparty (German bank) reports. This creates a one-sided reporting scenario under MiFID even though EMIR requires dual reporting.'},
+    CFTC:{obl:'NOT IN SCOPE',rep:'N/A — EU entities only',deadline:'N/A',action:'German entities. No US person involved. No CFTC nexus for this trade.',caveat:'If German bank has a CFTC-registered US SD subsidiary that separately enters into equivalent CDS positions with US counterparties, those US-booked trades would have CFTC obligations — but that is a different trade from a different entity.'},
+    HKMA:{obl:'NOT IN SCOPE',rep:'N/A',deadline:'N/A',action:'EU entities only. No HK connection for this trade.',caveat:''},
+    MAS:{obl:'NOT IN SCOPE',rep:'N/A',deadline:'N/A',action:'EU entities only. No SG connection for this trade.',caveat:''}
+   }},
+  {id:'S4',title:'Equity TRS: HK asset manager vs global bank (multi-booking)',cat:'Multi-jurisdiction',
+   desc:'HK-licensed asset manager (SFC Type 9) executes equity Total Return Swap on Hong Kong equities with a global bank having presence in HK (Authorised Institution), EU (investment firm), and SG (MAS LFI). Booking entity: HK branch of global bank.',
+   p1:'HK Asset Manager — SFC Type 9 licence + AMLA-licensed, active HKMA regulated',
+   p2:'Global Bank — HK branch (AI/HKMA), EU subsidiary (FC/EMIR, investment firm/MiFID), SG branch (MAS LFI)',
+   analysis:{
+    EMIR:{obl:'CONDITIONAL',rep:'Global bank EU entity only if it is the legal counterparty. Not obligated if trade booked entirely in HK branch.',deadline:'T+1 if in scope',action:'If EU entity books or guarantees trade: report equity TRS under EMIR. ANNA-DSB UPI required. LEI of HK manager needed. Mark cleared=N.',caveat:'CRITICAL — Booking entity determines obligation: HK branch booking = NO EMIR obligation. EU entity booking = EMIR mandatory. Firms must maintain clear, documented booking entity policies. Intragroup back-to-back between HK branch and EU entity creates a separate EMIR-reportable intragroup trade (unless intragroup exemption applies).'},
+    MIFID:{obl:'CONDITIONAL',rep:'EU investment firm subsidiary of global bank if it executes or is the execution venue.',deadline:'T+1 if in scope',action:'TRS on HK equities: reportable if executed by an EU investment firm. ISIN of underlying equity or CFI code required.',caveat:'ESMA guidance: TRS is reportable by EU investment firm regardless of where the underlying equity is listed. HK-listed underlying does not create a MiFID exemption. The execution by an EU authorised entity is what triggers MiFID.'},
+    CFTC:{obl:'NOT IN SCOPE',rep:'N/A — no US person involved in this trade',deadline:'N/A',action:'No US person involved. No CFTC obligation for HK–EU bilateral trade on HK equities.',caveat:'SEC jurisdiction consideration: equity swaps referencing US-listed equities or narrow-based US security indices may trigger SEC reporting requirements separately (not CFTC). HK equities are outside SEC scope.'},
+    HKMA:{obl:'MANDATORY — both parties',rep:'BOTH: HK Asset Manager (Type 9/AMLA) AND global bank HK branch (AI) independently report to HKTR. Both are HK-licensed entities.',deadline:'T+2',action:'Equity TRS is Phase 3 product in HKTR scope. Both parties are HK-licensed and have independent reporting obligations. Report as NEW. Both use the same UTI (coordinated between parties).',caveat:'De facto dual-sided reporting in HK even though HKMA is nominally a "single-sided" regime — because BOTH parties hold HK licences, both have independent reporting obligations. This is different from EMIR dual-sided: in HKMA, each party reports from its own perspective. Confirm whether global bank HK branch is an AI or LC as the precise obligations and margin requirements differ.'},
+    MAS:{obl:'CONDITIONAL',rep:'Global bank SG branch only if it is a party to or involved in booking of this trade.',deadline:'T+2 if in scope',action:'If SG entity is the legal counterparty or involved in booking: MAS Phase 3 equity TRS reporting applies. Report as NEW to DTCC Singapore TR.',caveat:'Trade booked entirely in HK with no SG entity involvement = NO MAS obligation for this specific trade from the SG entity. If SG branch enters into a separate back-to-back hedge with the HK branch, that SG-booked trade would have its own MAS reporting obligation.'}
+   }}
+];
+
+const THRESHOLDS=[
+  {regime:'EMIR',color:'#4a90d9',name:'EMIR — Counterparty classification',cats:[
+    {type:'FC',name:'Financial Counterparty',rep:true,clear:true,mrg:true,desc:'Banks, investment firms, insurance cos., UCITS, AIFs, pension funds, CCPs, TRs authorised in EU. All OTC derivatives reportable.'},
+    {type:'NFC+',name:'NFC above threshold',rep:true,clear:true,mrg:true,desc:'Non-financial entity exceeding clearing thresholds in any asset class. Thresholds calculated on gross notional OTC derivatives not objectively measurable hedges.'},
+    {type:'NFC-',name:'NFC below threshold',rep:true,clear:false,mrg:false,desc:'Below all thresholds. Hedging trades objectively measurable are excluded from threshold calculation. No clearing obligation.'},
+    {type:'TC',name:'Third-country entity',rep:false,clear:'Equivalence',mrg:'Equivalence',desc:'Outside EU. Captured only if EU FC/NFC+ is counterparty. May delegate to EU counterparty.'}
+  ],thresholds:[
+    {cls:'IRS / Interest Rate',val:'€1 billion gross notional OTC'},
+    {cls:'CDS / Credit',val:'€1 billion gross notional OTC'},
+    {cls:'FX Derivatives',val:'€3 billion gross notional OTC'},
+    {cls:'Equity Derivatives',val:'€1 billion gross notional OTC'},
+    {cls:'Commodity Derivatives',val:'€3 billion gross notional OTC'}
+  ]},
+  {regime:'CFTC',color:'#ef4444',name:'CFTC — Swap entity classification',cats:[
+    {type:'SD',name:'Swap Dealer',rep:true,clear:true,mrg:true,desc:'Holds out as dealer, makes market, or regularly enters swaps. De minimis threshold triggers SD registration requirement with CFTC.'},
+    {type:'MSP',name:'Major Swap Participant',rep:true,clear:true,mrg:true,desc:'Non-SD with substantial swap positions creating systemic risk. $1bn uncollateralised exposure per asset class or $2bn aggregate.'},
+    {type:'ECP',name:'Eligible Contract Participant',rep:false,clear:'If MAT',mrg:'If vs SD',desc:'Financial institutions, corporates, funds meeting asset/net worth tests. SD reports on ECP behalf.'},
+    {type:'Non-ECP',name:'Non-Eligible Contract Participant',rep:false,clear:false,mrg:false,desc:'Retail customers. Very limited derivative access. SD must report on their behalf.'}
+  ],thresholds:[
+    {cls:'SD de minimis (IRS / CDS)',val:'$8 billion aggregate gross notional'},
+    {cls:'SD de minimis (all other swaps)',val:'$25 billion aggregate gross notional'},
+    {cls:'MSP (single asset class)',val:'$1 billion daily avg uncollateralised exposure'},
+    {cls:'MSP (aggregate all classes)',val:'$2 billion daily avg uncollateralised exposure'}
+  ]},
+  {regime:'HKMA',color:'#10b981',name:'HKMA / SFC — Licensed entity types',cats:[
+    {type:'AI',name:'Authorised Institution',rep:true,clear:false,mrg:true,desc:'Licensed banks and deposit-taking companies under Banking Ordinance. Report all prescribed OTC derivatives in scope.'},
+    {type:'LC',name:'Licensed Corporation',rep:true,clear:false,mrg:false,desc:'SFC Type 1–9 licensed corporations. Report OTC derivatives entered in HK or constituting HK business.'},
+    {type:'AMLA',name:'AMLA-licensed entity',rep:true,clear:false,mrg:false,desc:'Asset managers licensed under Anti-Money Laundering and Counter-Terrorist Financing Ordinance.'},
+    {type:'Exempt',name:'Exempted Party',rep:false,clear:false,mrg:false,desc:'Sovereign entities, central banks, BIS, HKMA itself. SFO s.38A statutory exemption.'}
+  ],thresholds:[
+    {cls:'Authorised Institution (AI)',val:'All prescribed OTC derivatives — no notional threshold'},
+    {cls:'Licensed Corporation (Type 1–9)',val:'OTC derivatives in SFO Part IVA scope'},
+    {cls:'AMLA licensed entity',val:'OTC derivatives in AMLO-regulated activity scope'}
+  ]},
+  {regime:'MAS',color:'#f59e0b',name:'MAS — Licensed Financial Institution (LFI) types',cats:[
+    {type:'LFI',name:'Licensed Financial Institution',rep:true,clear:'SGD IRS',mrg:true,desc:'Full banks, wholesale banks, merchant banks, finance companies, CMS licensees under SFA.'},
+    {type:'AE',name:'Approved Exchange / CCP',rep:true,clear:false,mrg:false,desc:'Approved exchanges and clearing houses under SFA Part III.'},
+    {type:'ExemptFI',name:'Exempt Financial Institution',rep:false,clear:false,mrg:false,desc:'Government entities, MAS itself, central banks of foreign countries. Full or partial exemption.'}
+  ],thresholds:[
+    {cls:'Full / Wholesale Bank (MAS licensed)',val:'All OTC derivatives — full Phase 1/2/3 obligation'},
+    {cls:'Capital Markets Services licensee',val:'OTC derivatives in permitted investment activities'},
+    {cls:'Mandatory clearing (SGD IRS)',val:'3M/6M SORA benchmarks — between LFIs from 2023'}
+  ]}
+];
+
+const KDIFFS=[
+  {title:'Reporting model: single vs dual-sided',sev:'high',items:[
+    {r:'EMIR',t:'Dual-sided: both counterparties independently submit their version of the trade to their chosen TR. Each party is individually responsible for accuracy and timeliness. Delegation is possible but the delegating party remains legally responsible.'},
+    {r:'MIFID',t:'Single-sided: investment firm (or execution venue) reports its own transactions only to NCA via ARM. No counterparty report expected.'},
+    {r:'CFTC',t:'Waterfall: SD always reports for both sides — reduces burden but creates dependency on SD data quality. One entity is accountable for the trade report.'},
+    {r:'HKMA',t:'Single-sided: licensed entity reports. If both parties are HK-licensed (both AI or LC), both must report independently — creating de facto dual reporting in practice.'},
+    {r:'MAS',t:'Single-sided: MAS LFI reports. Same as HKMA — if both parties are MAS LFIs, both report independently.'}
+  ]},
+  {title:'Product identifier (UPI) adoption gap',sev:'high',items:[
+    {r:'CFTC',t:'First globally to mandate ANNA-DSB UPI (Dec 5, 2022). 48-attribute product template determines UPI. SDR validates against ANNA-DSB registry.'},
+    {r:'EMIR',t:'ANNA-DSB UPI mandatory from Apr 29, 2024 (REFIT). Pre-REFIT: internal taxonomy only. Major operational change requiring firms to obtain UPIs from ANNA-DSB before trade execution.'},
+    {r:'MIFID',t:'Uses ISIN (ISO 6166) and CFI (ISO 10962) — completely different identifier system. NOT interchangeable with ANNA-DSB UPI. Firms with MiFID and EMIR/CFTC obligations must maintain two parallel product identifier systems.'},
+    {r:'HKMA',t:'No ANNA-DSB UPI requirement as of 2024. Internal HKTR product codes used. Firms must maintain ANNA-DSB UPI for EU/US reporting AND separate HKTR codes for HK reporting.'},
+    {r:'MAS',t:'No ANNA-DSB UPI as of 2024. Enhanced internal taxonomy in Phase 3 but not ANNA-DSB. Same dual-system burden as HKMA for globally active firms.'}
+  ]},
+  {title:'Reporting timeline: real-time to T+2',sev:'high',items:[
+    {r:'CFTC',t:'Most aggressive globally: 15 min (cleared) / 30 min (uncleared) for SDs during US business hours (7:00–17:00 ET). Off-hours trades: T+2. Non-SD: T+2. This ATSP requirement drives operational infrastructure globally.'},
+    {r:'EMIR',t:'T+1 working day for all obligated parties (FC, NFC+, NFC-) for new trades and all lifecycle events.'},
+    {r:'MIFID',t:'T+1 by close of next trading day — measured as end of business day, not from time of execution.'},
+    {r:'HKMA',t:'T+2 HK business days — most lenient of the five regimes. Provides the greatest operational flexibility for post-trade processing.'},
+    {r:'MAS',t:'T+2 Singapore business days. Phase 3 (Oct 2024) encouraged intraday reporting as best practice for Phase 1 reporters but this is not mandatory.'}
+  ]},
+  {title:'Lifecycle event taxonomy',sev:'medium',items:[
+    {r:'EMIR',t:'EMIR REFIT introduced a unique DUAL-FIELD structure: Action Type field (NEWT/MODI/TERM…) AND a separate Event Type field (TRAD/CLRG/COMP/NOVA/TERM/PRTO…). No other regime has this two-dimension approach. Creates additional mapping complexity for multi-regime firms.'},
+    {r:'MIFID',t:'No lifecycle concept. Each execution is a standalone transaction report. Cancellations/amendments are reported as new opposite transactions — no MODI or TERM action types. Fundamental architectural difference from EMIR/CFTC.'},
+    {r:'CFTC',t:'Single Event Type field (~15 types). Aligned with CPMI-IOSCO CDE taxonomy post-Rewrite. Simpler than EMIR dual-field. Must reference original UTI for all lifecycle events.'},
+    {r:'HKMA',t:'5 action types — the simplest taxonomy. Must reference original UTI for MODIFY/TERMINATE. No Event Type separate field.'},
+    {r:'MAS',t:'6 action types including POSITION (Phase 3 addition). POSITION concept aligns with CPMI-IOSCO position reporting, distinguishing MAS from HKMA.'}
+  ]},
+  {title:'Collateral reporting granularity',sev:'medium',items:[
+    {r:'EMIR',t:'16 dedicated collateral fields from REFIT (Apr 2024) — the most granular in any regime globally. Covers IM posted/received, VM, collateral type, portfolio indicator, portfolio code, IM model type (SIMM/schedule/grid/other), and excess collateral.'},
+    {r:'MIFID',t:'Collateral completely out of scope for MiFID II transaction reporting. MiFID reports executions only. A firm with MiFID-only obligation has zero collateral reporting requirements.'},
+    {r:'CFTC',t:'Comparable depth to EMIR for registered SDs. IM posted/received, VM, collateral type (cash/securities), portfolio margin indicator, IM model type. SD-centric — non-SD counterparties have no direct collateral obligation.'},
+    {r:'HKMA',t:'Basic: collateral flag (Y/N), type, and value only. No IM model type, no excess collateral field, no portfolio code. Significantly less granular than EMIR/CFTC.'},
+    {r:'MAS',t:'Improving with Phase 3 (Oct 2024): added portfolio margining indicator and IM/VM split. Still less granular than EMIR/CFTC. No model type or excess collateral field.'}
+  ]},
+  {title:'FX forward &amp; FX swap scope divergence',sev:'high',items:[
+    {r:'EMIR',t:'Physically settled FX forwards AND FX swaps: fully reportable as OTC derivatives under EMIR. No US-style Treasury exemption exists under EU law.'},
+    {r:'MIFID',t:'FX forwards with commercial purpose: C(4) exemption possible for non-financial companies hedging commercial risk. Cash-settled FX forwards (NDFs): C(6) applies, reportable. Case-by-case commercial exemption assessment required.'},
+    {r:'CFTC',t:'MAJOR DIVERGENCE: US Treasury Secretary exercised authority under Dodd-Frank to exempt FX swaps and FX forwards from the swap definition. These instruments are NOT reportable under CFTC Part 45. FX options, NDFs, cross-currency swaps remain reportable swaps. This creates significant cross-border asymmetry: the same EUR/USD FX swap is reportable under EMIR but NOT under CFTC.'},
+    {r:'HKMA',t:'FX forwards, FX swaps, NDFs, FX options all reportable under HKMA SFO regime. Spot FX (standard settlement ≤T+2) excluded. No Treasury-style exemption.'},
+    {r:'MAS',t:'FX forwards, FX swaps, NDFs, FX options all reportable under MAS SFA regime. Spot FX excluded. No Treasury-style exemption. Aligns with HKMA.'}
+  ]}
+];
+
+// ─── UTILITIES ──────────────────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+const repPill=v=>{
+  if(v==='Yes') return `<span class="pill pill-yes"><span class="dot dot-y"></span>Reportable</span>`;
+  if(v==='No') return `<span class="pill pill-no"><span class="dot dot-n"></span>Not in scope</span>`;
+  if(v==='Partial') return `<span class="pill pill-part"><span class="dot dot-p"></span>Partial</span>`;
+  return `<span class="pill pill-cond"><span class="dot dot-c"></span>${v}</span>`;
+};
+const mandPill=v=>{
+  if(v===true||v==='Yes') return `<span class="pill pill-mand">Required</span>`;
+  if(v===false||v==='No'||v==='N/A') return `<span class="pill pill-no">No / N/A</span>`;
+  return `<span class="pill pill-part">${v}</span>`;
+};
+const oblPill=o=>{
+  if(o.includes('MANDATORY')) return `<span class="pill pill-mand">✓ ${o}</span>`;
+  if(o.includes('CONDITIONAL')) return `<span class="pill pill-cond">◌ ${o}</span>`;
+  return `<span class="pill pill-no">✕ ${o}</span>`;
+};
+const colStyle=r=>({EMIR:`color:${RC.EMIR}`,MIFID:`color:${RC.MIFID}`,CFTC:`color:${RC.CFTC}`,HKMA:`color:${RC.HKMA}`,MAS:`color:${RC.MAS}`}[r]);
+
+// ─── OVERVIEW ───────────────────────────────────────────────────────────────
+function buildOverview(){
+  // Stats
+  $('stat-row').innerHTML=R.map(r=>`
+    <div class="stat-cell" style="border-top:2px solid ${RC[r]}">
+      <div class="stat-num" style="color:${RC[r]}">${STATS[r].fields}</div>
+      <div class="stat-lbl">${r} fields</div>
+      <div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:4px">
+        <div style="font-size:.6rem;color:var(--text3)">Mandatory<br><span style="color:var(--text2);font-weight:600">${STATS[r].mand}</span></div>
+        <div style="font-size:.6rem;color:var(--text3)">Identifiers<br><span style="color:var(--text2);font-weight:600">${STATS[r].ids}</span></div>
+        <div style="font-size:.6rem;color:var(--text3)">Economics<br><span style="color:var(--text2);font-weight:600">${STATS[r].econ}</span></div>
+        <div style="font-size:.6rem;color:var(--text3)">Risk mitigation<br><span style="color:var(--text2);font-weight:600">${STATS[r].risk}</span></div>
+      </div>
+    </div>`).join('');
+
+  // Cards
+  $('overview-cards').innerHTML=R.map(r=>{
+    const d=OV[r];
+    return `<div class="card" style="border-top:2px solid ${RC[r]}">
+      <div style="font-size:.65rem;font-weight:700;color:${RC[r]};letter-spacing:.07em;margin-bottom:8px;text-transform:uppercase">${RF[r]} ${r}</div>
+      <div style="font-size:.7rem;color:var(--text2);margin-bottom:6px;line-height:1.4">${d.full}</div>
+      <div style="font-size:.68rem;margin-bottom:3px"><span style="color:var(--text3)">Model: </span><span style="color:var(--text)">${d.model}</span></div>
+      <div style="font-size:.68rem;margin-bottom:3px"><span style="color:var(--text3)">Deadline: </span><span style="color:var(--text)">${d.deadline}</span></div>
+      <div style="font-size:.68rem;margin-bottom:3px"><span style="color:var(--text3)">Scope: </span><span style="color:var(--text2)">${d.scope}</span></div>
+      <div style="font-size:.65rem;margin-top:8px;padding:4px 7px;background:var(--amber-bg);border:1px solid ${RC[r]}22;border-radius:3px;color:var(--amber)">${d.update}</div>
+    </div>`;
+  }).join('');
+
+  // Reportability matrix
+  let mh=`<table><thead><tr><th>Asset class</th>${R.map(r=>`<th style="${colStyle(r)}">${RF[r]} ${r}</th>`).join('')}</tr></thead><tbody>`;
+  PRODUCTS.forEach(p=>{
+    mh+=`<tr><td style="font-weight:600;white-space:nowrap;font-size:.72rem;color:var(--text)">${p.name}</td>`;
+    R.forEach(r=>{mh+=`<td>${repPill(p[r].rep)}</td>`;});
+    mh+='</tr>';
+  });
+  mh+='</tbody></table>';
+  $('overview-matrix').innerHTML=mh;
+
+  // Full table
+  const dims=[['Legal basis',r=>OV[r].basis],['Technical standards',r=>OV[r].ts],['Regulator',r=>OV[r].reg],['Reporting model',r=>OV[r].model],['Deadline',r=>OV[r].deadline],['Trade repository',r=>OV[r].dest],['Scope',r=>OV[r].scope],['Latest update',r=>OV[r].update]];
+  let th=`<table><thead><tr><th style="min-width:130px">Dimension</th>${R.map(r=>`<th style="${colStyle(r)};min-width:190px">${RF[r]} ${r}</th>`).join('')}</tr></thead><tbody>`;
+  dims.forEach(([l,fn])=>{th+=`<tr><td style="font-weight:600;font-size:.72rem;white-space:nowrap;color:var(--text)">${l}</td>${R.map(r=>`<td>${fn(r)}</td>`).join('')}</tr>`;});
+  th+='</tbody></table>';
+  $('overview-tbl').innerHTML=th;
+}
+
+// ─── PRODUCTS ───────────────────────────────────────────────────────────────
+let prodFilter='all';
+function buildProducts(){
+  const items=prodFilter==='all'?PRODUCTS:PRODUCTS.filter(p=>p.cat===prodFilter);
+  let h=`<table><thead><tr><th class="stickyc" style="min-width:170px">Product / asset class</th>${R.map(r=>`<th style="${colStyle(r)};min-width:185px">${RF[r]} ${r}</th>`).join('')}</tr></thead><tbody>`;
+  items.forEach(p=>{
+    h+=`<tr><td class="stickyc"><div style="font-weight:600;font-size:.74rem;color:var(--text);margin-bottom:3px">${p.name}</div><div style="font-size:.65rem;color:var(--text3);line-height:1.4">${p.sub}</div></td>`;
+    R.forEach(r=>{
+      const d=p[r];
+      h+=`<td>
+        <div style="margin-bottom:5px">${repPill(d.rep)}</div>
+        <div style="font-family:'Courier New',monospace;font-size:.62rem;color:${RC[r]};margin-bottom:4px">${d.scope}</div>
+        <div style="font-size:.68rem;color:var(--text3);line-height:1.45;border-left:2px solid ${RC[r]}33;padding-left:6px">${d.note}</div>
+        ${d.upi?`<div style="margin-top:5px"><span style="font-size:.58rem;padding:2px 6px;background:rgba(74,144,217,.12);color:var(--emir);border:1px solid rgba(74,144,217,.25);border-radius:3px;font-family:'Courier New',monospace;font-weight:700">UPI REQUIRED</span></div>`:`<div style="margin-top:5px"><span style="font-size:.58rem;padding:2px 6px;background:rgba(74,80,100,.2);color:var(--text3);border:1px solid var(--border);border-radius:3px;font-family:'Courier New',monospace">No UPI yet</span></div>`}
+      </td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  $('prod-tbl').innerHTML=h;
+}
+function filterProd(f,btn){
+  prodFilter=f;
+  document.querySelectorAll('#s-products .f-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  buildProducts();
+}
+
+// ─── ATTRIBUTES ─────────────────────────────────────────────────────────────
+let activeAttr=ATTRS[0].id;
+const ATTR_CATS=[...new Set(ATTRS.map(a=>a.cat))];
+
+function buildAttrUI(){
+  // Category tab bar
+  $('attr-cat-bar').innerHTML=ATTR_CATS.map((cat,i)=>`<button class="tab-btn${i===0?' act':''}" onclick="switchAttrCat('${cat}',this)">${cat}</button>`).join('');
+  // Sidebar
+  buildAttrSidebar(ATTR_CATS[0]);
+  // Detail
+  renderAttrDetail(ATTRS[0].id);
+  // Full diff table
+  buildAttrFullTable();
+}
+
+function switchAttrCat(cat,btn){
+  document.querySelectorAll('#attr-cat-bar .tab-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+  buildAttrSidebar(cat);
+  const first=ATTRS.find(a=>a.cat===cat);
+  if(first){activeAttr=first.id;renderAttrDetail(first.id);}
+  buildAttrFullTable(cat);
+}
+
+function buildAttrSidebar(cat){
+  $('attr-sidebar').innerHTML=`<div class="sidebar-sec-hdr">${cat}</div>`+
+    ATTRS.filter(a=>a.cat===cat).map(a=>`
+      <div class="sidebar-item${a.id===activeAttr?' act':''}" onclick="selectAttr('${a.id}',this)">
+        <div class="si-name">${a.name}</div>
+      </div>`).join('');
+}
+
+function selectAttr(id,el){
+  activeAttr=id;
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('act'));
+  el.classList.add('act');
+  renderAttrDetail(id);
+}
+
+function renderAttrDetail(id){
+  const a=ATTRS.find(x=>x.id===id);
+  if(!a)return;
+  const cmpCells=R.map(r=>`
+    <div class="cmp-cell" style="border-top:2px solid ${RC[r]}">
+      <div class="cmp-regime-name" style="color:${RC[r]}">${RF[r]} ${r}</div>
+      <div class="cmp-field-name">${a.rows.find(row=>row.lbl==='Field name')?.[r]||a.rows.find(row=>row.lbl==='Field')?.[r]||'—'}</div>
+      ${a.rows.filter(row=>row.lbl!=='Field name'&&row.lbl!=='Field').map(row=>`
+        <div class="cmp-lbl">${row.lbl.replace('⚠ ','')}</div>
+        <div class="cmp-val${row.lbl==='⚠ Critical difference'?' cmp-note':''}">${row[r]||'—'}</div>`).join('')}
+    </div>`).join('');
+
+  $('attr-detail').innerHTML=`
+    <div class="attr-detail">
+      <div class="attr-detail-hdr">
+        <span class="attr-id-badge">${a.id}</span>
+        <div><div class="attr-name">${a.name}</div><div class="attr-desc">${a.desc}</div></div>
+      </div>
+      <div class="cmp-grid">${cmpCells}</div>
+    </div>`;
+}
+
+function buildAttrFullTable(catFilter){
+  const items=catFilter?ATTRS.filter(a=>a.cat===catFilter):ATTRS;
+  let h=`<table><thead><tr>
+    <th class="stickyc" style="min-width:120px">Attribute</th>
+    ${R.map(r=>`<th style="${colStyle(r)};min-width:175px">${RF[r]} ${r}</th>`).join('')}
+  </tr></thead><tbody>`;
+  items.forEach(a=>{
+    a.rows.forEach((row,ri)=>{
+      const isWarn=row.lbl.startsWith('⚠');
+      const isFirst=ri===0;
+      h+=`<tr${isWarn?' style="background:rgba(245,166,35,.04)"':''}>`;
+      if(isFirst){
+        h+=`<td class="stickyc" rowspan="${a.rows.length}" style="vertical-align:top">
+          <div style="font-family:'Courier New',monospace;font-size:.62rem;font-weight:700;color:var(--amber);margin-bottom:3px">${a.id}</div>
+          <div style="font-size:.72rem;font-weight:600;color:var(--text)">${a.name}</div>
+          <div style="font-size:.62rem;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.04em">${a.cat}</div>
+        </td>`;
+      }
+      h+=`<td style="font-size:.68rem;color:var(--text3);font-weight:600;background:var(--bg2);border-right:1px solid var(--border2);white-space:nowrap;font-family:'Courier New',monospace">${row.lbl.replace('⚠ ','⚠ ')}</td>`;
+      R.forEach(r=>{
+        const v=row[r]||'—';
+        const warn=v.startsWith('⚠');
+        h+=`<td style="font-size:.7rem;${warn?'color:'+RC.MAS+';':''}${row.lbl==='Mandatory'?'font-weight:600':''}">${v}</td>`;
+      });
+      h+='</tr>';
+    });
+  });
+  h+='</tbody></table>';
+  $('attr-full-table').innerHTML=h;
+}
+
+// ─── SCENARIOS ───────────────────────────────────────────────────────────────
+let activeScen=SCENARIOS[0].id;
+function buildScenarios(){
+  $('scen-list').innerHTML=SCENARIOS.map(s=>`
+    <div class="scen-item${s.id===activeScen?' act':''}" onclick="selectScen('${s.id}',this)">
+      <div class="si-id">${s.id}</div>
+      <div class="si-title">${s.title}</div>
+      <span class="si-cat">${s.cat}</span>
+    </div>`).join('');
+  renderScenario(SCENARIOS[0]);
+}
+function selectScen(id,el){
+  activeScen=id;
+  document.querySelectorAll('.scen-item').forEach(i=>i.classList.remove('act'));
+  el.classList.add('act');
+  renderScenario(SCENARIOS.find(s=>s.id===id));
+}
+function renderScenario(s){
+  const oblColor={MANDATORY:'var(--green)',CONDITIONAL:'var(--mifid)','NOT IN SCOPE':'var(--text3)'};
+  const oblIcon={MANDATORY:'✓',CONDITIONAL:'◌','NOT IN SCOPE':'✕'};
+  const getObl=o=>{
+    if(o.includes('MANDATORY'))return{c:'var(--green)',i:'✓',l:o.replace('MANDATORY','Mandatory')};
+    if(o.includes('CONDITIONAL'))return{c:'var(--mifid)',i:'◌',l:'Conditional'};
+    return{c:'var(--text3)',i:'✕',l:'Not in scope'};
+  };
+  const summBar=R.map(r=>{const a=s.analysis[r];const st=getObl(a.obl);return`<div class="summ-cell"><div class="summ-regime" style="color:${RC[r]}">${RF[r]} ${r}</div><div class="summ-icon" style="color:${st.c}">${st.i}</div><div class="summ-lbl">${st.l}</div></div>`;}).join('');
+  const oblRows=R.map(r=>{
+    const a=s.analysis[r];
+    const st=getObl(a.obl);
+    return`<div class="obl-row">
+      <div>
+        <div class="obl-regime" style="color:${RC[r]};margin-bottom:5px">${RF[r]} ${r}</div>
+        ${oblPill(a.obl)}
+      </div>
+      <div>
+        <div class="obl-meta"><span>Reporter: </span><strong style="color:var(--text)">${a.rep}</strong></div>
+        ${a.deadline&&a.deadline!=='N/A'?`<div class="obl-meta" style="margin-top:3px"><span>Deadline: </span><span style="font-family:'Courier New',monospace;font-size:.7rem;background:var(--bg3);padding:1px 7px;border-radius:3px;color:var(--amber)">${a.deadline}</span></div>`:''}
+        ${a.action&&a.action!=='N/A'?`<div class="obl-action">▸ ${a.action}</div>`:''}
+        ${a.caveat?`<div class="obl-caveat">⚠ ${a.caveat}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  $('scen-detail').innerHTML=`
+    <div>
+      <div class="panel" style="margin-bottom:12px">
+        <div class="panel-hdr"><span class="panel-title">${s.id} — ${s.title}</span><span style="font-size:.62rem;font-family:'Courier New',monospace;color:var(--emir)">${s.cat}</span></div>
+        <div class="panel-body">
+          <div style="font-size:.78rem;color:var(--text2);line-height:1.6;margin-bottom:12px">${s.desc}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px"><div style="font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;color:var(--amber);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Party 1</div><div style="font-size:.75rem;color:var(--text);line-height:1.5">${s.p1}</div></div>
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:10px"><div style="font-family:'Courier New',monospace;font-size:.55rem;font-weight:700;color:var(--amber);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Party 2</div><div style="font-size:.75rem;color:var(--text);line-height:1.5">${s.p2}</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="summ-bar">${summBar}</div>
+      <div class="panel">
+        <div class="panel-hdr"><span class="panel-title">Regime-by-regime obligations</span></div>
+        <div style="padding:0 16px">${oblRows}</div>
+      </div>
+    </div>`;
+}
+
+// ─── THRESHOLDS ──────────────────────────────────────────────────────────────
+function buildThresholds(){
+  $('thresh-content').innerHTML=THRESHOLDS.map(d=>{
+    const catRows=d.cats.map(c=>`<tr>
+      <td style="font-family:'Courier New',monospace;font-weight:700;font-size:.7rem;color:${d.color}">${c.type}</td>
+      <td style="font-weight:600;font-size:.72rem;color:var(--text)">${c.name}</td>
+      <td>${c.rep?'<span class="pill pill-mand" style="font-size:.58rem">Yes</span>':'<span class="pill pill-no" style="font-size:.58rem">No</span>'}</td>
+      <td>${c.clear===true?'<span class="pill pill-mand" style="font-size:.58rem">Yes</span>':c.clear===false?'<span class="pill pill-no" style="font-size:.58rem">No</span>':`<span class="pill pill-part" style="font-size:.58rem">${c.clear}</span>`}</td>
+      <td>${c.mrg===true?'<span class="pill pill-mand" style="font-size:.58rem">Yes</span>':c.mrg===false?'<span class="pill pill-no" style="font-size:.58rem">No</span>':`<span class="pill pill-part" style="font-size:.58rem">${c.mrg}</span>`}</td>
+      <td style="font-size:.7rem;color:var(--text2);line-height:1.4">${c.desc}</td>
+    </tr>`).join('');
+    const threshRows=d.thresholds.map(t=>`<div class="thresh-row"><span class="thresh-key">${t.cls}</span><span class="thresh-val">${t.val}</span></div>`).join('');
+    return`<div class="thresh-card">
+      <div class="thresh-hdr" style="color:${d.color}">${RF[d.regime]} ${d.name}</div>
+      <div class="tbl-wrap" style="border:none;border-radius:0">
+        <table><thead><tr><th>Code</th><th>Category</th><th>Reporting</th><th>Clearing</th><th>Margin</th><th>Description</th></tr></thead>
+        <tbody>${catRows}</tbody></table>
+      </div>
+      <div style="padding:0">${threshRows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── DIFFERENCES ────────────────────────────────────────────────────────────
+function buildDifferences(){
+  $('diff-content').innerHTML=KDIFFS.map(d=>{
+    const sevClass=d.sev==='high'?'diff-high':'diff-med';
+    const rows=d.items.map(i=>`
+      <div class="kdiff-row">
+        <div class="kdiff-regime" style="color:${RC[i.r]}">${RF[i.r]} ${i.r}</div>
+        <div class="kdiff-text">${i.t}</div>
+      </div>`).join('');
+    return`<div class="kdiff-card">
+      <div class="kdiff-hdr">
+        <span class="kdiff-title">${d.title}</span>
+        <span class="kdiff-sev ${sevClass}">${d.sev} divergence</span>
+      </div>
+      <div class="kdiff-body">${rows}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────────────────
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('act'));
+  $('s-'+id).classList.add('act');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('act'));
+  btn.classList.add('act');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+buildOverview();
+buildProducts();
+buildAttrUI();
+buildScenarios();
+buildThresholds();
+buildDifferences();
+</script>
+</body>
+</html>
